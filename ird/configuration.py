@@ -1,3 +1,5 @@
-QTS_WATCH_FOLDER = '/home/yuriy/Documents/qts_watch_folder'
-MM_BASE_URL = 'http://mm'
-WFE_BASE_URL = 'http://wfe'
+QTS_WATCH_FOLDER = '/home/yyekovenko/Documents/qts_watch_folder'
+PROTOCOL = 'http'
+# PROTOCOL = 'mock'
+MM_BASE_URL = f'{PROTOCOL}://mm'
+WFE_BASE_URL = f'{PROTOCOL}://wfe'

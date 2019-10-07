@@ -1,46 +1,55 @@
-# from unittest.mock import Mock, patch
-import requests
+from unittest.mock import Mock
+import os
+import re
 
-from ird.tests.basetest import BaseTest
-from ird.tests.utils.fileutils import inject_program_xml_file, check_program_file_consumed, wait_for
-from ird.tests.utils.wfehelper import WFERestHelper
-import requests_mock
+from ird.configuration import PROTOCOL
+from ird.tests.utils.misc import generate_unique_program_name
 
 
-class TestProgramPublishing(BaseTest):
-    """
-    Start with creating a file and putting it to the folder.
-    Verify the process is running.
-    When process is completed verify that data is created in Media Manager.
+# mocking os.path.isfile
+if PROTOCOL == 'mock':
+    os.path.isfile = Mock()
+    os.path.isfile.return_value = False
 
-    - add new xml file
-    - wait for file to be consumed (within 60s).
-      - fail if not consumed within 60 seconds
-    - once the file disappears check if the process appears in wfe in Running state
-    - wait for 180 seconds - process should go to Completed
-      - fail if process disappears or does not go to Completed within timeout
-    - check if program appeared in media manager
-    """
+mocked_processes = [
+    {
+        "name": "process1",
+        "program_id": "process1",
+        "status": "completed"
+    },
+    {
+        "name": "process2",
+        "program_id": "program2",
+        "status": "running"
+    }
+]
 
-    def test_program_publishing(self):
-        program = 'program1'
 
-        filename = inject_program_xml_file(program)
-        check_program_file_consumed(filename, timeout=60)
+def test_program_publishing(wfe, mm, folder):
+    if PROTOCOL == 'mock':
+        adapter = wfe.session.get_adapter('mock')
+        adapter.register_uri('GET', '//wfe/processes', json=mocked_processes)
+        adapter.register_uri('GET', re.compile('//mm/entities/program'), status_code=404)
 
-        # check_program_process_is_running(program)
-        assert len(self.wfe.get_processes(program, 'running')) == 1
+    program = generate_unique_program_name(wfe, mm)
 
-        # check_program_process_completed(program, timeout=180)
-        wait_for(len(self.wfe.get_processes(program, 'completed')) == 1, 180)
+    filename = folder.inject_program_xml_file(program)
+    assert folder.is_program_file_consumed(filename, timeout=60), \
+        'File should be consumed within 60 seconds'
 
-        # check_program_added_to_media_manager(program)
+    if PROTOCOL == 'mock':
+        mocked_processes.append({
+            "name": "process3",
+            "program_id": program,
+            "status": "completed"
+        })
+        adapter.register_uri('GET', '//wfe/processes', json=mocked_processes)
+        adapter.register_uri('GET', f'//mm/entities/program/{program}', status_code=200)
 
-        response = self.wfe.get_fake()
-        print(response.json())
+    assert wfe.program_process_exists(program), \
+        'The process for just consumed file should be created in the Workflow Engine'
+    assert wfe.is_program_process_completed(program, timeout=180), \
+        'The `consumer` process should complete within 180 seconds'
+    assert mm.program_exists(program), \
+        'The result of the process should be published to Media Manager'
 
-    # @requests_mock.Mocker()
-    def test_2(self):
-        with requests_mock.Mocker() as m:
-            m.get('http://jsonplaceholder.typicode.com/todos', text='resp2')
-            assert requests.get('http://jsonplaceholder.typicode.com/todos').text == 'resp'
