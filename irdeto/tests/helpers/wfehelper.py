@@ -1,6 +1,6 @@
 import requests
 
-from ird.tests.utils.misc import wait_for
+from irdeto.tests.utils.misc import wait_for
 
 
 class WorkflowEngineRestHelper:

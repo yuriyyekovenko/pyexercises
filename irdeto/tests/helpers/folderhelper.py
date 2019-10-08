@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 
-from ird.tests.utils.misc import wait_for
+from irdeto.tests.utils.misc import wait_for
 
 
 class WatchFolderHelper:

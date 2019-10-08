@@ -3,10 +3,10 @@ import pytest
 import requests
 import requests_mock
 
-from ird.configuration import WFE_BASE_URL, MM_BASE_URL, QTS_WATCH_FOLDER
-from ird.tests.helpers.mmhelper import MediaManagerRestHelper
-from ird.tests.helpers.wfehelper import WorkflowEngineRestHelper
-from ird.tests.helpers.folderhelper import WatchFolderHelper
+from irdeto.configuration import WFE_BASE_URL, MM_BASE_URL, QTS_WATCH_FOLDER
+from irdeto.tests.helpers.mmhelper import MediaManagerRestHelper
+from irdeto.tests.helpers.wfehelper import WorkflowEngineRestHelper
+from irdeto.tests.helpers.folderhelper import WatchFolderHelper
 
 
 # configuring requests mock
